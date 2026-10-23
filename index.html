@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1b261e">
+  <meta name="description" content="효린이와 고양이 삼총사가 농장을 지키는 레트로 격자 디펜스 웹게임">
+  <title>농장 디펜스 3 — 고양이 수비대</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="농장 디펜스 3 처음으로">
+        <span class="brand-mark">🌱</span>
+        <span><b>농장 디펜스 <i>3</i></b><small>고양이 수비대</small></span>
+      </a>
+      <div class="top-actions">
+        <span class="offline-badge"><i></i> 설치 없이 바로 플레이</span>
+        <button class="icon-button" id="soundToggle" type="button" aria-label="효과음 켜기/끄기" title="효과음 켜기/끄기">🔊</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="home-screen" id="homeScreen">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-dot"></span> FARM DEFENSE · PIXEL FRONTIER</div>
+          <h1>오늘도<br><em>농장을 지켜!</em></h1>
+          <p>울타리를 부수고 침입자를 막아라.<br>체력에 따라 자라는 효린이와 고양이 삼총사의 수비 작전!</p>
+          <div class="home-buttons">
+            <button class="primary-button" id="startNew" type="button"><span>새 게임 시작</span><b>▶</b></button>
+            <button class="secondary-button" id="continueGame" type="button" hidden><span>이어하기</span><b>↗</b></button>
+          </div>
+          <div class="best-row"><span>🏆 최고 기록</span><b id="bestRecord">0점 · Lv.1</b></div>
+          <div class="control-note">키보드 <kbd>WASD</kbd> 이동 <kbd>Space</kbd> 발사 <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 탄환 변경<br>모바일은 화면의 방향 버튼과 발사 버튼을 사용하세요.</div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-sun">밭을<br>지켜라!</div>
+          <div class="preview-field">
+            <div class="preview-fence fence-one"></div><div class="preview-fence fence-two"></div>
+            <div class="preview-barn">농장</div>
+            <div class="preview-crops"><span>🍓 딸기</span><span>🍎 사과</span><span>🍇 포도</span></div>
+            <img class="hero-cat cat-nuni" src="assets/pet-nuni.png" alt="">
+            <img class="hero-cat cat-yangi" src="assets/pet-yangi.png" alt="">
+            <img class="hero-cat cat-maru" src="assets/pet-maru.png" alt="">
+            <span class="preview-spark spark-one">✦</span><span class="preview-spark spark-two">✦</span>
+          </div>
+          <div class="hero-sticker">LEVEL<br><b>UP!</b></div>
+        </div>
+        <div class="home-footer"><span>🌾 밭과 헛간을 지켜내면 다음 레벨로!</span><span>혼자서 즐기는 브라우저 저장 게임</span></div>
+      </section>
+
+      <section class="game-screen" id="gameScreen" hidden>
+        <div class="game-heading">
+          <div><span class="section-kicker">농장 수비 작전</span><h2>고양이 수비대 <small id="seasonLabel">봄 작전</small></h2></div>
+          <div class="heading-actions">
+            <button class="small-button" id="fullscreenButton" type="button" title="전체 화면">⛶ <span>전체 화면</span></button>
+            <button class="small-button pause-button" id="pauseButton" type="button" title="일시 정지">Ⅱ <span>정지</span></button>
+          </div>
+        </div>
+
+        <div class="battle-layout">
+          <section class="field-card" aria-label="전장">
+            <div class="field-topline">
+              <span class="mission-chip"><i></i><b id="missionText">방어 준비</b></span>
+              <span class="field-coords">SECTOR <b id="sectorText">A-01</b></span>
+            </div>
+            <div class="stage-frame" id="stageFrame">
+              <canvas id="board" width="640" height="480" aria-label="격자형 농장 디펜스 게임 화면"></canvas>
+              <div class="units-layer" id="unitsLayer" aria-hidden="true"></div>
+              <div class="stage-vignette" aria-hidden="true"></div>
+              <div class="stage-pop" id="stagePop" aria-live="polite"></div>
+            </div>
+            <div class="field-bottomline"><span>🏠 농장 본진과 과수밭을 지켜라</span><span><b id="enemiesLeft">0</b> 침입자 대기</span></div>
+          </section>
+
+          <aside class="control-panel">
+            <div class="stats-card">
+              <div class="stat-head"><span>작전 현황</span><span class="live-pill" id="phasePill">대기</span></div>
+              <div class="metric-line"><span>🍓 과수·작물밭</span><b id="cropCount">4 / 4</b></div>
+              <div class="bar-line"><span>💚 효린이</span><b id="playerHpText">100 / 100</b></div>
+              <div class="health-track"><i id="playerHpBar"></i></div>
+              <div class="growth-line"><span>성장 모습</span><b id="growthStageText">성인 효린이</b></div>
+              <div class="growth-meter" id="growthMeter" aria-label="체력에 따른 효린이 모습"><i></i><i></i><i></i><i></i></div>
+              <div class="bar-line barn-line"><span>🏠 농장 본진</span><b id="barnHpText">120 / 120</b></div>
+              <div class="health-track barn-track"><i id="barnHpBar"></i></div>
+              <div class="xp-line"><span>Lv.<b id="rankText">1</b> 수비대</span><b id="xpText">0 / 100 XP</b></div>
+              <div class="xp-track"><i id="xpBar"></i></div>
+            </div>
+
+            <div class="score-grid">
+              <div><small>작전 레벨</small><b>Lv.<span id="levelText">1</span></b></div>
+              <div><small>점수</small><b id="scoreText">00000</b></div>
+              <div><small>열매 포인트</small><b>🍓 <span id="coinText">20</span></b></div>
+              <div><small>처치</small><b id="killsText">0</b></div>
+            </div>
+
+            <div class="ammo-card">
+              <div class="panel-title"><span>탄환 선택</span><small>키보드 1 · 2 · 3</small></div>
+              <div class="ammo-options">
+                <button type="button" class="ammo-option selected" data-ammo="bb"><span>●</span><b>BB탄</b><small id="ammoBb">60발</small><kbd>1</kbd></button>
+                <button type="button" class="ammo-option" data-ammo="steel"><span>◆</span><b>강철탄</b><small id="ammoSteel">16발</small><kbd>2</kbd></button>
+                <button type="button" class="ammo-option" data-ammo="stone"><span>⬟</span><b>돌멩이</b><small id="ammoStone">5발</small><kbd>3</kbd></button>
+              </div>
+              <button class="special-button auto-special" id="specialButton" type="button" disabled><span>💥</span><span><b>바위 강타</b><small id="specialText">정비 시간에 해금</small></span><kbd>AUTO</kbd></button>
+            </div>
+
+            <div class="squad-card">
+              <div class="panel-title"><span>고양이 수비대</span><small id="catCount">0 / 3 출동</small></div>
+              <div class="squad-list" id="squadList"></div>
+            </div>
+
+              <div class="quick-tip"><b>작전 팁</b><span id="tipText">누니는 본진 수비, 양이는 장거리 공격, 마루는 고양이 회복을 맡아요. 효린이는 레벨마다 나타나는 초코우유를 먹어야 회복해요.</span></div>
+          </aside>
+        </div>
+
+        <div class="touch-controls" aria-label="터치 조작">
+          <div class="dpad" aria-label="방향 버튼">
+            <button data-dir="up" type="button" aria-label="위로 이동">▲</button>
+            <button data-dir="left" type="button" aria-label="왼쪽 이동">◀</button>
+            <button data-dir="down" type="button" aria-label="아래로 이동">▼</button>
+            <button data-dir="right" type="button" aria-label="오른쪽 이동">▶</button>
+          </div>
+          <button class="touch-fire" id="touchFire" type="button"><span>✦</span><b>발사</b></button>
+          <button class="touch-special" id="touchSpecial" type="button" disabled><span>💥</span><b id="touchSpecialText">해금</b></button>
+        </div>
+        <div class="game-footnote"><span>🥛 종이곽 초코우유를 찾으면 효린이 체력 회복</span><span>자동 저장 · 이 게임 전용 브라우저 기록</span></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="shopModal" hidden>
+    <section class="modal-card shop-modal" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+      <div class="modal-eyebrow">WAVE CLEARED · 작전 정비</div>
+      <div class="modal-heading"><div><h2 id="shopTitle">방어 성공!</h2><p id="shopSummary">밭과 헛간을 지켜냈어요.</p></div><div class="reward-stamp">+<b id="rewardText">14</b><small>열매</small></div></div>
+      <div class="shop-farm-status" aria-label="농장과 작물밭 체력">
+        <div class="shop-farm-line"><b>🏠 농장 본진</b><strong id="shopBarnHpText">120 / 120</strong></div>
+        <div class="health-track shop-health-track"><i id="shopBarnHpBar"></i></div>
+        <div class="shop-farm-line crop-health-line"><span>🍓 작물밭 전체 체력</span><strong id="shopCropHpText">160 / 160 · 4/4 밭 유지</strong></div>
+        <div class="health-track shop-health-track crop-health-track"><i id="shopCropHpBar"></i></div>
+      </div>
+      <div class="shop-content">
+        <section><div class="shop-section-title"><b>🧰 수비대 강화</b><small>강화는 최대 5단계</small></div><div class="upgrade-grid" id="upgradeGrid"></div></section>
+        <section><div class="shop-section-title"><b>🐈 고양이 수비대</b><small>각 고양이는 한 번만 출동</small></div><div class="pet-shop-grid" id="petShopGrid"></div></section>
+        <section><div class="shop-section-title"><b>📦 정비 물자</b><small>탄약과 농장 수리</small></div><div class="supply-row" id="supplyRow"></div></section>
+      </div>
+      <div class="modal-footer"><span>💡 다음 레벨에서는 침입자가 더 강해져요.</span><button class="primary-button" id="nextWaveButton" type="button"><span>다음 레벨 방어 시작</span><b>→</b></button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="pauseModal" hidden>
+    <section class="modal-card pause-modal" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <div class="modal-eyebrow">작전을 잠시 멈췄어요</div><h2 id="pauseTitle">일시 정지</h2>
+      <p>현재 진행은 이 브라우저에 자동 저장됩니다.</p>
+      <div class="pause-actions"><button class="primary-button" id="resumeButton" type="button"><span>작전 계속하기</span><b>▶</b></button><button class="secondary-button" id="toTitleButton" type="button"><span>첫 화면으로</span><b>⌂</b></button></div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="gameOverModal" hidden>
+    <section class="modal-card gameover-modal" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
+      <div class="modal-eyebrow">작전 종료 · 농장의 기록</div><div class="gameover-icon">🏚️</div><h2 id="gameOverTitle">헛간이 무너졌어요</h2>
+      <p id="gameOverSummary">고양이 수비대와 함께한 기록이에요.</p>
+      <div class="result-grid"><div><small>도달 레벨</small><b id="resultLevel">1</b></div><div><small>최종 점수</small><b id="resultScore">0</b></div><div><small>침입자 처치</small><b id="resultKills">0</b></div></div>
+      <div class="pause-actions"><button class="primary-button" id="retryButton" type="button"><span>다시 도전</span><b>↻</b></button><button class="secondary-button" id="homeButton" type="button"><span>첫 화면으로</span><b>⌂</b></button></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+</body>
+</html>
