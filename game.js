@@ -1275,7 +1275,7 @@
       active.add(key);
       const item = getUnitNode(key, `unit-enemy${info.boss ? ' unit-boss' : info.elite ? ' unit-elite' : ''}`, info.img);
       const sizeScale = info.visualScale || 1;
-      const enemySize = info.boss ? [74, 68] : info.elite ? [54, 50] : [35 * sizeScale, 38 * sizeScale];
+      const enemySize = info.boss ? [90, 80] : info.elite ? [54, 50] : [35 * sizeScale, 38 * sizeScale];
       positionUnit(item.node, enemy.x, enemy.y, enemySize[0] * scale, enemySize[1] * scale, enemy.dir);
       if (item.node._hpFill) item.node._hpFill.style.width = `${Math.max(0, enemy.hp / enemy.maxHp * 100)}%`;
       item.node.style.opacity = enemy.kind === 'mole' && enemy.burrow > 0 ? '0.4' : '1';
