@@ -1218,7 +1218,7 @@
     playerNode.className = 'unit unit-player';
     const sprite = document.createElement('div'); sprite.className = 'player-sprite';
     const slingshot = document.createElement('span'); slingshot.className = 'player-slingshot'; slingshot.setAttribute('aria-hidden', 'true');
-    slingshot.innerHTML = '<svg viewBox="0 0 24 24" focusable="false"><path class="sling-band" d="M8 4L16 4"/><path class="sling-wood" d="M12 22L12 9M12 9L7 3M12 9L17 3"/></svg>';
+    slingshot.innerHTML = '<svg viewBox="0 0 24 24" focusable="false"><path class="sling-band" d="M8 4L16 4"/><path class="sling-wood" d="M12 22L12 9M12 9L7 3M12 9L17 3"/><path class="sling-aim-outline" d="M12 5V-3M8 1L12-3L16 1"/><path class="sling-aim" d="M12 5V-3M8 1L12-3L16 1"/></svg>';
     playerNode.append(sprite, slingshot); playerNode._sprite = sprite; playerNode._slingshot = slingshot; unitsLayer.append(playerNode);
   }
 
@@ -1257,13 +1257,12 @@
     const [playerWidth, playerHeight] = playerSizes[growthStage];
     positionUnit(playerNode, game.player.x, game.player.y, playerWidth * scale, playerHeight * scale, 'down');
     playerNode._sprite.style.transform = game.player.dir === 'left' ? 'scaleX(-1)' : 'none';
-    const slingAim = { up: 0, right: 90, down: 180, left: 270 }[game.player.dir] || 0;
     const aim = directionVector(game.player.dir);
     const slingDistance = playerSlingDistance() * scale;
-    playerNode._slingshot.style.setProperty('--sling-rotation', `${slingAim}deg`);
+    playerNode._slingshot.dataset.direction = game.player.dir;
     playerNode._slingshot.style.setProperty('--sling-x', `${aim.x * slingDistance}px`);
     playerNode._slingshot.style.setProperty('--sling-y', `${aim.y * slingDistance}px`);
-    playerNode._slingshot.style.setProperty('--sling-size', `${18 * scale}px`);
+    playerNode._slingshot.style.setProperty('--sling-size', `${20 * scale}px`);
     playerNode.style.opacity = '1';
     playerNode.classList.toggle('is-hit', game.playerInvulnerable > 0);
     const active = new Set();
