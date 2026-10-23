@@ -41,8 +41,15 @@
     rabbit: { name: '토끼', img: 'rabbit.svg', hp: 28, speed: 91, damage: 6, score: 110, fruit: 3, xp: 16, color: '#eadbbf' },
     crow: { name: '까마귀', img: 'crow.svg', hp: 23, speed: 104, damage: 5, score: 100, fruit: 2, xp: 14, color: '#8497b1', flying: true },
     boar: { name: '멧돼지', img: 'boar.svg', hp: 66, speed: 53, damage: 11, score: 230, fruit: 5, xp: 30, color: '#b67852' },
-    kingBoar: { name: '왕멧돼지', img: 'king-boar.svg', hp: 290, speed: 46, damage: 18, score: 1500, fruit: 25, xp: 110, color: '#df9953', boss: true },
+    mouse: { name: '들쥐', img: 'mouse.svg', hp: 18, speed: 132, damage: 4, score: 75, fruit: 2, xp: 10, color: '#b7a1a0', visualScale: 0.74 },
+    wolf: { name: '늑대', img: 'wolf.svg', hp: 105, speed: 72, damage: 14, score: 350, fruit: 7, xp: 42, color: '#87929a' },
+    fox: { name: '여우', img: 'fox.svg', hp: 48, speed: 112, damage: 8, score: 180, fruit: 4, xp: 24, color: '#e18d4b' },
+    raccoon: { name: '너구리', img: 'raccoon.svg', hp: 78, speed: 64, damage: 10, score: 260, fruit: 6, xp: 34, color: '#858078' },
+    deer: { name: '사슴', img: 'deer.svg', hp: 92, speed: 96, damage: 12, score: 320, fruit: 6, xp: 38, color: '#c28b5c' },
+    kingBoar: { name: '왕멧돼지', img: 'king-boar.svg', hp: 360, speed: 46, damage: 20, score: 850, fruit: 16, xp: 85, color: '#df9953', elite: true },
+    tiger: { name: '호랑이 대왕', img: 'tiger.svg', hp: 980, speed: 40, damage: 30, score: 3000, fruit: 40, xp: 180, color: '#f0a547', boss: true },
   };
+  const ENEMY_ROSTER = ['mole', 'rabbit', 'crow', 'boar', 'mouse', 'wolf', 'fox', 'raccoon', 'deer'];
   const AMMO = {
     bb: { name: 'BB탄', speed: 390, damage: 18, countKey: 'bb', color: '#ffefc7', cost: 15, refill: 50 },
     steel: { name: '강철탄', speed: 470, damage: 38, countKey: 'steel', color: '#a9dbef', cost: 20, refill: 12 },
@@ -261,7 +268,7 @@
     game.petShots = [];
     game.spawned = 0;
     game.total = Math.min(6 + Math.floor(game.level * 1.25), 14);
-    if (game.level % 5 === 0) game.total += 1;
+    if (game.level % 5 === 0) game.total += 2;
     game.spawnTimer = initial ? 0.55 : 0.85;
     game.waveTime = 0;
     game.phase = 'playing';
@@ -325,6 +332,11 @@
     return 4;
   }
 
+  function playerSlingDistance() {
+    const heights = { 1: 36, 2: 42.5, 3: 49, 4: 55 };
+    return heights[growthStageForHealth(game.hp, game.maxHp)] * 0.55 + 6;
+  }
+
   function collectMilkIfNearby() {
     if (!game?.milk || Math.hypot(game.player.x - game.milk.x, game.player.y - game.milk.y) > 19) return;
     if (game.hp >= game.maxHp) {
@@ -352,25 +364,25 @@
     return game.grid[row][col];
   }
 
-  function isBlocked(x, y, flying = false) {
+  function isBlocked(x, y, flying = false, canCrossFences = false) {
     const kind = getTileAt(x, y).kind;
     if (kind === 's') return true;
     if (flying) return false;
-    return kind === 'b' || kind === 'w';
+    return kind === 'w' || (kind === 'b' && !canCrossFences);
   }
 
-  function canOccupy(x, y, radius = 10, flying = false) {
-    return !isBlocked(x - radius, y - radius, flying) && !isBlocked(x + radius, y - radius, flying)
-      && !isBlocked(x - radius, y + radius, flying) && !isBlocked(x + radius, y + radius, flying);
+  function canOccupy(x, y, radius = 10, flying = false, canCrossFences = false) {
+    return !isBlocked(x - radius, y - radius, flying, canCrossFences) && !isBlocked(x + radius, y - radius, flying, canCrossFences)
+      && !isBlocked(x - radius, y + radius, flying, canCrossFences) && !isBlocked(x + radius, y + radius, flying, canCrossFences);
   }
 
-  function moveEntity(entity, dx, dy, radius, flying = false) {
+  function moveEntity(entity, dx, dy, radius, flying = false, canCrossFences = false) {
     let moved = false;
     const startX = entity.x, startY = entity.y;
     const nx = Math.max(radius + 2, Math.min(W - radius - 2, entity.x + dx));
     const ny = Math.max(radius + 2, Math.min(H - radius - 2, entity.y + dy));
-    if (canOccupy(nx, entity.y, radius, flying)) { moved ||= nx !== entity.x; entity.x = nx; }
-    if (canOccupy(entity.x, ny, radius, flying)) { moved ||= ny !== entity.y; entity.y = ny; }
+    if (canOccupy(nx, entity.y, radius, flying, canCrossFences)) { moved ||= nx !== entity.x; entity.x = nx; }
+    if (canOccupy(entity.x, ny, radius, flying, canCrossFences)) { moved ||= ny !== entity.y; entity.y = ny; }
     if (moved) {
       const movedX = entity.x - startX, movedY = entity.y - startY;
       entity.lastMoveDir = Math.abs(movedX) > Math.abs(movedY) ? (movedX < 0 ? 'left' : 'right') : (movedY < 0 ? 'up' : 'down');
@@ -381,11 +393,11 @@
   function freeActorsFromNewWalls() {
     if (!game) return;
     ejectFromNewWall(game.player, 12);
-    for (const pet of game.pets) ejectFromNewWall(pet, 9);
+    for (const pet of game.pets) ejectFromNewWall(pet, 9, true);
   }
 
-  function ejectFromNewWall(entity, radius) {
-    if (canOccupy(entity.x, entity.y, radius, false)) return;
+  function ejectFromNewWall(entity, radius, canCrossFences = false) {
+    if (canOccupy(entity.x, entity.y, radius, false, canCrossFences)) return;
     const reverse = { up: 'down', down: 'up', left: 'right', right: 'left' };
     const enteredDirection = entity.lastMoveDir || entity.dir || 'up';
     const escapeDirection = reverse[enteredDirection] || 'down';
@@ -406,7 +418,7 @@
     for (let row = 0; row < ROWS; row += 1) {
       for (let col = 0; col < COLS; col += 1) {
         const x = col * TILE + TILE / 2, y = row * TILE + TILE / 2;
-        if (!canOccupy(x, y, radius, false)) continue;
+        if (!canOccupy(x, y, radius, false, canCrossFences)) continue;
         const dx = x - entity.x, dy = y - entity.y, distance = Math.hypot(dx, dy);
         const alignment = distance ? (dx * vector.x + dy * vector.y) / distance : 0;
         openTiles.push({ x, y, score: distance + (1 - alignment) * TILE * 2 });
@@ -420,13 +432,12 @@
   }
 
   function chooseEnemyKind() {
-    if (game.level % 5 === 0 && game.spawned === game.total - 1) return 'kingBoar';
-    const roll = Math.random();
-    if (game.level < 2) return roll < 0.58 ? 'mole' : 'rabbit';
-    if (roll < 0.24) return 'mole';
-    if (roll < 0.48) return 'rabbit';
-    if (roll < 0.69) return 'crow';
-    return 'boar';
+    if (game.level % 5 === 0 && game.spawned === game.total - 1) return 'tiger';
+    if (game.level % 5 === 0 && game.spawned === game.total - 2) return 'kingBoar';
+    const unlocked = Math.min(ENEMY_ROSTER.length, 4 + Math.floor((game.level - 1) / 2));
+    const roster = ENEMY_ROSTER.slice(0, unlocked);
+    const offset = (game.level - 1) % roster.length;
+    return roster[(game.spawned + offset) % roster.length];
   }
 
   function spawnEnemy() {
@@ -446,7 +457,7 @@
       petAttackCd: 0.45 + Math.random() * 0.4,
     });
     game.spawned += 1;
-    if (info.boss) { popText('🐗 왕멧돼지 등장! 헛간을 지켜라!', 2200); beep(150, 0.28, 'sawtooth', 0.04); }
+    if (info.boss) { popText('🐯 호랑이 대왕 등장! 농장의 최종 보스!', 2600); beep(110, 0.34, 'sawtooth', 0.045); }
   }
 
   function tilePassable(col, row, flying = false) {
@@ -509,7 +520,13 @@
       enemy.chargeTimer = (enemy.chargeTimer || 0) - dt;
       enemy.petAttackCd = Math.max(0, (enemy.petAttackCd || 0) - dt);
       if (enemy.kind === 'mole' && enemy.moleTimer <= 0) { enemy.burrow = 0.65; enemy.moleTimer = 4.5 + Math.random() * 2.5; }
-      if (enemy.kind === 'boar' && enemy.chargeTimer <= 0) { enemy.charge = 0.72; enemy.chargeTimer = 3.8 + Math.random() * 1.4; popText('멧돼지가 돌진해요!'); }
+      if ((enemy.kind === 'boar' || enemy.kind === 'deer' || enemy.kind === 'tiger') && enemy.chargeTimer <= 0) {
+        enemy.charge = enemy.kind === 'tiger' ? 1 : 0.72;
+        enemy.chargeTimer = enemy.kind === 'tiger' ? 4.1 : 3.8 + Math.random() * 1.4;
+        if (enemy.kind === 'tiger') popText('호랑이 대왕이 포효하며 돌진해요!', 1600);
+        else if (enemy.kind === 'deer') popText('사슴이 밭을 향해 뛰어들어요!');
+        else popText('멧돼지가 돌진해요!');
+      }
       const goal = enemyGoal(enemy);
       const distance = Math.hypot(goal.x - enemy.x, goal.y - enemy.y);
       if (goal.crop && distance < 21) {
@@ -549,7 +566,7 @@
           const dx = tx - enemy.x, dy = ty - enemy.y, length = Math.hypot(dx, dy);
           if (length > 1) {
             const step = enemy.speed * (enemy.slow > 0 ? 0.45 : 1) * (enemy.charge > 0 ? 1.7 : 1) * dt;
-            const moved = moveEntity(enemy, dx / length * Math.min(step, length), dy / length * Math.min(step, length), info.boss ? 15 : 11, info.flying);
+            const moved = moveEntity(enemy, dx / length * Math.min(step, length), dy / length * Math.min(step, length), info.boss ? 18 : info.elite ? 15 : 11, info.flying);
             if (moved && Math.abs(dx) > Math.abs(dy)) enemy.dir = dx < 0 ? 'left' : 'right';
             else if (moved && dy) enemy.dir = dy < 0 ? 'up' : 'down';
             if (!moved && !info.flying) damageFrontFence(enemy, dt);
@@ -599,7 +616,10 @@
     }
     const type = game.ammo, info = AMMO[type], v = directionVector(game.player.dir);
     const power = 1 + game.upgrades.power * 0.12;
-    game.bullets.push({ x: game.player.x + v.x * 17, y: game.player.y + v.y * 17, vx: v.x, vy: v.y, speed: info.speed, damage: info.damage * power, type, color: info.color });
+    const launchDistance = playerSlingDistance() + 3;
+    const launchX = Math.max(1, Math.min(W - 1, game.player.x + v.x * launchDistance));
+    const launchY = Math.max(1, Math.min(H - 1, game.player.y + v.y * launchDistance));
+    game.bullets.push({ x: launchX, y: launchY, vx: v.x, vy: v.y, speed: info.speed, damage: info.damage * power, type, color: info.color });
     game.ammoCounts[type] -= 1;
     const haste = 1 + (game.rank - 1) * 0.01 + game.upgrades.rapid * 0.08;
     game.player.fireCooldown = 0.42 / haste;
@@ -621,7 +641,7 @@
         continue;
       }
       if (tile.kind === 's' || tile.kind === 'w') { addEffect(bullet.x, bullet.y, '·', 0.18, '#d9e6d0'); continue; }
-      const hit = game.enemies.find((enemy) => Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y) < (ENEMIES[enemy.kind].boss ? 23 : 15));
+      const hit = game.enemies.find((enemy) => Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y) < (ENEMIES[enemy.kind].boss ? 38 : ENEMIES[enemy.kind].elite ? 27 : 15));
       if (hit) {
         hit.hp -= bullet.damage;
         addEffect(bullet.x, bullet.y, '✦', 0.28, bullet.color);
@@ -641,8 +661,9 @@
     game.score += info.score * Math.min(2, 1 + Math.floor((game.level - 1) / 5) * 0.1);
     game.coins += info.fruit;
     game.xp += info.xp;
-    addEffect(enemy.x, enemy.y, enemy.kind === 'kingBoar' ? '🐗' : '✦', 0.75, info.color);
-    if (enemy.kind === 'kingBoar') { game.score += 500; showToast('왕멧돼지 격퇴! 열매 포인트 +25'); beep(840, 0.22, 'triangle', 0.04); }
+    addEffect(enemy.x, enemy.y, enemy.kind === 'tiger' ? '🐯' : enemy.kind === 'kingBoar' ? '🐗' : '✦', 0.75, info.color);
+    if (enemy.kind === 'tiger') { game.score += 1000; showToast('호랑이 대왕 격퇴! 농장을 지켜냈어요!'); beep(840, 0.32, 'triangle', 0.05); }
+    else if (enemy.kind === 'kingBoar') { showToast('왕멧돼지 격퇴! 열매 포인트 +16'); beep(760, 0.2, 'triangle', 0.035); }
     else beep(740, 0.045, 'square', 0.018);
     while (game.xp >= game.xpNext) {
       game.xp -= game.xpNext;
@@ -703,7 +724,7 @@
       }
       if (distance > 14) {
         const speed = info.speed * Math.min(1, distance / 52) * dt;
-        moveEntity(pet, dx / distance * Math.min(speed, distance), dy / distance * Math.min(speed, distance), 9, false);
+        moveEntity(pet, dx / distance * Math.min(speed, distance), dy / distance * Math.min(speed, distance), 9, false, true);
       }
     }
     game.pets = game.pets.filter((pet) => pet.hp > 0);
@@ -724,7 +745,7 @@
       shot.x += shot.vx * distance;
       shot.y += shot.vy * distance;
       shot.travelled += distance;
-      const hit = game.enemies.find((enemy) => enemy.hp > 0 && Math.hypot(enemy.x - shot.x, enemy.y - shot.y) < (ENEMIES[enemy.kind].boss ? 25 : 18));
+      const hit = game.enemies.find((enemy) => enemy.hp > 0 && Math.hypot(enemy.x - shot.x, enemy.y - shot.y) < (ENEMIES[enemy.kind].boss ? 38 : ENEMIES[enemy.kind].elite ? 27 : 18));
       if (hit) {
         hit.hp -= shot.damage;
         game.effects.push({ type: 'claw', x: hit.x, y: hit.y - 2, angle: shot.angle, life: 0.34, maxLife: 0.34, color: '#fff0dc' });
@@ -1236,10 +1257,16 @@
     const [playerWidth, playerHeight] = playerSizes[growthStage];
     positionUnit(playerNode, game.player.x, game.player.y, playerWidth * scale, playerHeight * scale, 'down');
     playerNode._sprite.style.transform = game.player.dir === 'left' ? 'scaleX(-1)' : 'none';
-    const slingRotation = { up: 0, right: 90, down: 180, left: 270 }[game.player.dir] || 0;
-    playerNode._slingshot.style.setProperty('--sling-rotation', `${slingRotation}deg`);
-    playerNode._slingshot.style.setProperty('--sling-size', `${14 * scale}px`);
-    playerNode._slingshot.style.setProperty('--sling-offset', `${-12 * scale}px`);
+    const playerRotation = rotationFor(game.player.dir);
+    const slingAim = { up: 0, right: 90, down: 180, left: 270 }[game.player.dir] || 0;
+    const aim = directionVector(game.player.dir), radians = playerRotation * Math.PI / 180;
+    const slingDistance = playerSlingDistance() * scale;
+    const localX = aim.x * Math.cos(radians) + aim.y * Math.sin(radians);
+    const localY = -aim.x * Math.sin(radians) + aim.y * Math.cos(radians);
+    playerNode._slingshot.style.setProperty('--sling-rotation', `${slingAim - playerRotation}deg`);
+    playerNode._slingshot.style.setProperty('--sling-x', `${localX * slingDistance}px`);
+    playerNode._slingshot.style.setProperty('--sling-y', `${localY * slingDistance}px`);
+    playerNode._slingshot.style.setProperty('--sling-size', `${18 * scale}px`);
     playerNode.style.opacity = '1';
     playerNode.classList.toggle('is-hit', game.playerInvulnerable > 0);
     const active = new Set();
@@ -1250,8 +1277,10 @@
     for (const enemy of game.enemies) {
       const info = ENEMIES[enemy.kind], key = `enemy-${enemy.id}`;
       active.add(key);
-      const item = getUnitNode(key, `unit-enemy${info.boss ? ' unit-boss' : ''}`, info.img);
-      positionUnit(item.node, enemy.x, enemy.y, (info.boss ? 49 : 35) * scale, (info.boss ? 50 : 38) * scale, enemy.dir);
+      const item = getUnitNode(key, `unit-enemy${info.boss ? ' unit-boss' : info.elite ? ' unit-elite' : ''}`, info.img);
+      const sizeScale = info.visualScale || 1;
+      const enemySize = info.boss ? [74, 68] : info.elite ? [54, 50] : [35 * sizeScale, 38 * sizeScale];
+      positionUnit(item.node, enemy.x, enemy.y, enemySize[0] * scale, enemySize[1] * scale, enemy.dir);
       if (item.node._hpFill) item.node._hpFill.style.width = `${Math.max(0, enemy.hp / enemy.maxHp * 100)}%`;
       item.node.style.opacity = enemy.kind === 'mole' && enemy.burrow > 0 ? '0.4' : '1';
     }

@@ -399,6 +399,7 @@ background:#e96f5c}
 .unit-boss .unit-hp{height:5px;
 top:-7px}
 .unit-boss img{filter:drop-shadow(0 0 5px #f1a044)}
+.unit-elite img{filter:drop-shadow(0 0 3px #df9953)}
 .unit-pet:after{content:"";
 position:absolute;
 z-index:-1;
@@ -1045,10 +1046,10 @@ animation-iteration-count:1!important}
 .growth-meter i{height:5px;flex:1;border-radius:9px;background:#344234}
 .growth-meter[data-stage="1"] i:nth-child(-n+1),.growth-meter[data-stage="2"] i:nth-child(-n+2),.growth-meter[data-stage="3"] i:nth-child(-n+3),.growth-meter[data-stage="4"] i:nth-child(-n+4){background:linear-gradient(90deg,#84ae5e,#ccdf8a)}
 .player-sprite{width:100%;height:100%;background-color:transparent;background-repeat:no-repeat;background-size:500% 100%;background-position:0 0;image-rendering:pixelated;filter:drop-shadow(1px 0 0 #f4d98d) drop-shadow(-1px 0 0 #f4d98d) drop-shadow(0 1px 0 #f4d98d) drop-shadow(0 -1px 0 #f4d98d) drop-shadow(0 2px 2px #121a13c9);animation:hyorin-idle .72s steps(4) infinite}
-.player-slingshot{position:absolute;z-index:2;left:50%;top:50%;width:var(--sling-size,22px);height:var(--sling-size,22px);transform:translate(-50%,-50%) rotate(var(--sling-rotation,0deg)) translateY(var(--sling-offset,-9px));pointer-events:none;filter:drop-shadow(0 1px 1px #172017cc)}
+.player-slingshot{position:absolute;z-index:7;left:calc(50% + var(--sling-x,0px));top:calc(50% + var(--sling-y,0px));width:var(--sling-size,22px);height:var(--sling-size,22px);transform:translate(-50%,-50%) rotate(var(--sling-rotation,0deg));pointer-events:none;filter:drop-shadow(0 0 2px #fff0b8) drop-shadow(0 2px 2px #172017e8)}
 .player-slingshot svg{display:block;width:100%;height:100%;overflow:visible}
-.player-slingshot .sling-wood{fill:none;stroke:#51331e;stroke-width:4.4;stroke-linecap:round;stroke-linejoin:round}
-.player-slingshot .sling-band{fill:none;stroke:#f5dc8b;stroke-width:2;stroke-linecap:round}
+.player-slingshot .sling-wood{fill:none;stroke:#51331e;stroke-width:4.8;stroke-linecap:round;stroke-linejoin:round}
+.player-slingshot .sling-band{fill:none;stroke:#ffe688;stroke-width:2.8;stroke-linecap:round}
 .unit-player[data-stage="4"] .player-sprite{animation:none;background-position:0 0}
 .unit-player.is-hit .player-sprite{filter:brightness(1.14) drop-shadow(1px 0 0 #fff2ba) drop-shadow(-1px 0 0 #fff2ba) drop-shadow(0 1px 0 #fff2ba) drop-shadow(0 -1px 0 #fff2ba) drop-shadow(0 2px 3px #121a13df)}
 @keyframes hyorin-idle{to{background-position:100% 0}}
