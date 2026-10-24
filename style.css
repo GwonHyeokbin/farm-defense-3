@@ -1034,6 +1034,54 @@ height:55px}
 .modal-footer .primary-button{min-width:0}
 }
 
+@media(pointer:coarse){
+.game-screen{padding-bottom:calc(158px + env(safe-area-inset-bottom,0px))}
+.touch-controls{position:fixed;
+z-index:15;
+left:50%;
+bottom:calc(env(safe-area-inset-bottom,0px) + 8px);
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:clamp(10px,4vw,24px);
+width:min(440px,calc(100vw - 24px));
+min-height:0;
+margin:0;
+padding:6px 12px;
+border:1px solid #73845b;
+border-radius:16px;
+background:linear-gradient(135deg,#1c2a20f2,#2a3a2df2);
+box-shadow:0 8px 24px #071009b8,inset 0 1px #ffffff12;
+backdrop-filter:blur(8px);
+transform:translateX(-50%)}
+.touch-controls .dpad{flex:0 0 123px}
+.touch-controls .touch-fire,.touch-controls .touch-special{flex:0 0 auto}
+}
+
+@media(pointer:coarse) and (orientation:landscape) and (max-height:520px){
+.game-screen{padding-bottom:calc(126px + env(safe-area-inset-bottom,0px))}
+.touch-controls{width:min(390px,calc(100vw - 20px));
+gap:clamp(8px,2vw,18px);
+padding:4px 9px}
+.touch-controls .dpad{flex-basis:109px;
+width:109px;
+height:99px}
+.touch-controls .dpad button{width:35px;
+height:33px}
+.touch-controls .dpad button[data-dir="up"]{left:37px}
+.touch-controls .dpad button[data-dir="left"]{top:33px}
+.touch-controls .dpad button[data-dir="down"]{top:66px;
+left:37px}
+.touch-controls .dpad button[data-dir="right"]{top:33px;
+left:74px}
+.touch-controls .touch-fire{width:62px;
+height:62px}
+.touch-controls .touch-fire span{font-size:17px}
+.touch-controls .touch-special{width:52px;
+height:52px}
+.touch-controls .touch-special span{font-size:16px}
+}
+
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;
 transition-duration:.01ms!important;
 animation-duration:.01ms!important;
